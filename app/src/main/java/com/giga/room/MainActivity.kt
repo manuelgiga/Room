@@ -2,6 +2,8 @@ package com.giga.room
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.Observer
@@ -10,11 +12,9 @@ import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
 
         val db = Room.databaseBuilder(
             applicationContext,
@@ -25,19 +25,29 @@ class MainActivity : AppCompatActivity() {
         val note = Note(0, "el bosque de sauces", "trata de animales")
 
         GlobalScope.launch(Dispatchers.IO) {
-            noteDao.insert(note)
             val allNotes = noteDao.getAll()
-            withContext(Dispatchers.Main) {
-                var extension = allNotes.size
-                if (extension<5){
-                    Toast.makeText(this@MainActivity, "medida: $extension", Toast.LENGTH_SHORT).show()
-                    Log.d("Notes", allNotes.toString())
+                if(allNotes.isNullOrEmpty()) {
+                    noteDao.insert(note)
+                    withContext(Dispatchers.Main){
+                        Toast.makeText(this@MainActivity, "La lista está vacía", Toast.LENGTH_SHORT).show()
+                    }
                 }else{
-                    Toast.makeText(this@MainActivity, "Ya no puedo mas", Toast.LENGTH_SHORT).show()
-                    Log.d("Notes", allNotes.toString())
+                    if (allNotes.size<2){
+                        noteDao.insert(note)
+                        withContext(Dispatchers.Main){
+                            Toast.makeText(this@MainActivity, "la medida es ${allNotes.size}", Toast.LENGTH_SHORT).show()
+                        }
+                    }else{
+                        withContext(Dispatchers.Main){
+                            Toast.makeText(this@MainActivity, "Registro anulado", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, "Excede el numero maximo de registros por día", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
                 }
 
-
+            withContext(Dispatchers.Main) {
+                    Log.d("Notes", allNotes.toString())
             }
         }
 
