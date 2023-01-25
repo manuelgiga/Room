@@ -4,28 +4,34 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.lifecycle.Observer
+import androidx.room.Room
 import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
-    @OptIn(DelicateCoroutinesApi::class)
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val db = AppDatabase(applicationContext)
-        val taskDao = db.taskDao()
+
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "database-name"
+        ).build()
+
+        val noteDao = db.noteDao()
+        val note = Note(0, "title", "content")
 
         GlobalScope.launch(Dispatchers.IO) {
-            taskDao.insertTask(Task(0, "Title", "Description", false))
-            val tasks = taskDao.getAllTasks()
-            delay(2_000)
-            Log.d("dateichon", "la data es: ${tasks.value}")
+            noteDao.insert(note)
+            val allNotes = noteDao.getAll()
+            withContext(Dispatchers.Main) {
+                Log.d("Notes", allNotes.toString())
+            }
         }
-
-
-
-
 
 
     }
 }
+
